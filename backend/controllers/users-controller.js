@@ -64,7 +64,7 @@ const signup = async (req, res, next) => {
             userId: createUser.id, 
             email: createUser.email
         }, 
-        'supersecret_dont_share',
+        process.env.JWT_KEY,
         {
             expiresIn: '1h'
         });      
@@ -88,7 +88,7 @@ const login = async (req, res, next) => {
     }
 
     if (!existingUser) {
-        return next(new HttpError('Credentials not match', 401));
+        return next(new HttpError('Credentials not match', 403));
     }
 
     let isValidPassword =  false;
@@ -100,16 +100,17 @@ const login = async (req, res, next) => {
     }
 
     if (!isValidPassword) {
-        return next(new HttpError('Credentials not match', 401));
+        return next(new HttpError('Credentials not match', 403));
     }
 
     let token;
     try {
+        console.log(process.env.JWT_KEY);
         token = jwt.sign({
             userId: existingUser.id, 
             email: existingUser.email
         },
-            'supersecret_dont_share',
+            process.env.JWT_KEY,
         {
             expiresIn: '1h'
         })

@@ -60,7 +60,7 @@ const createPlace = async (req, res, next) => {
     if (!errors.isEmpty()) {
         return next(new HttpError('Invalid inputs passed, plase check your data.', 422));
     }
-    const {title, description, address, creator} = req.body;
+    const {title, description, address} = req.body;
 
     let coordinates = getCoordinates();
     // the logic to get coordinates form google API using Address
@@ -75,13 +75,13 @@ const createPlace = async (req, res, next) => {
         description,
         image: 'uploads/images/'+req.file.filename,
         address,
-        creator,
+        creator: req.userData.userId,
         location: coordinates
     });
     
     let user;
     try{
-        user = await User.findById(creator);
+        user = await User.findById(req.userData.userId);
     } catch(err){
         return next(new HttpError('Could net find user for this provided ID.', 500));
     }
@@ -120,6 +120,12 @@ const updatePlace = async (req, res, next) => {
         return next(error);
     }
 
+    //check if the user has Authorization to update a place
+    if (place.creator.toString() !== req.userData.userId) {
+        const error = new HttpError('You are not allowed to edit this place !', 401);
+        return next(error);
+    }
+
     place.title = title;
     place.description = description;
 
@@ -147,6 +153,13 @@ const deletePlace = async (req, res, next) => {
         const error = new HttpError('Could not find Place for this provided id, place try again!', 500);
         return next(error);
     }
+
+    //check if the user has Authorization to delete a place
+    if (place.creator.id !== req.userData.userId) {
+        const error = new HttpError('You are not allowed to delete this place!', 401);
+        return next(error);
+    }
+
     const imagePath = place.image;
     try {
         const sess = await mongoose.startSession();
@@ -156,6 +169,7 @@ const deletePlace = async (req, res, next) => {
         await place.creator.save(); // await place.creator.save({session: sess}); Not work for me
         await sess.commitTransaction();
 
+        //Delete image from disk using the URL in database
         fs.unlink(imagePath, err => {
             console.log(err)
         });

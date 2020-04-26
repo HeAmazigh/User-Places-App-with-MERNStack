@@ -1,0 +1,9 @@
+{
+    "env": {
+        "DB_USER": "mern",
+        "DB_PASSWORD": "DGFd6XcsVlBEszfP",
+        "DB_NAME": "userPlaces",
+        "GOOGLE_MAP_KEY": "AIzaSyAQGpR4lNkJWgECQEttzC33nrIdBJDFtbA",
+        "JWT_KEY": "supersecret_dont_share"
+    }
+}
